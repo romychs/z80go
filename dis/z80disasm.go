@@ -2,20 +2,21 @@ package dis
 
 import (
 	"fmt"
-	"okemu/z80"
 	"strings"
+
+	"github.com/romychs/z80go"
 )
 
 type Disassembler struct {
 	pc   uint16
-	core z80.MemIoRW
+	core z80go.MemIoRW
 }
 
 type Disassembly interface {
 	Disassm(pc uint16) string
 }
 
-func NewDisassembler(core z80.MemIoRW) *Disassembler {
+func NewDisassembler(core z80go.MemIoRW) *Disassembler {
 	d := Disassembler{
 		pc:   0,
 		core: core,

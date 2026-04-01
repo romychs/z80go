@@ -4,12 +4,11 @@ import (
 	"bufio"
 	"bytes"
 	_ "embed"
-	"okemu/z80"
-	"okemu/z80/c99"
 	"strconv"
 	"strings"
 	"testing"
 
+	"github.com/romychs/z80go"
 	log "github.com/sirupsen/logrus"
 )
 
@@ -82,7 +81,7 @@ var testIn []byte
 var testExpected []byte
 
 type Computer struct {
-	cpu    *c99.Z80
+	cpu    *z80go.CPU
 	memory [65536]byte
 	ports  [256]byte
 }
@@ -93,8 +92,6 @@ var z80TestsExpected map[string]Expect
 var computer Computer
 
 var testNames []string
-
-//var z80 *c99.Z80
 
 func init() {
 	z80TestsIn = make(map[string]Z80TestIn)
@@ -107,7 +104,7 @@ func init() {
 	for addr := 0; addr < 255; addr++ {
 		computer.ports[addr] = 0
 	}
-	computer.cpu = c99.New(&computer)
+	computer.cpu = z80go.NewCPU(&computer)
 }
 
 func (c *Computer) M1MemRead(addr uint16) byte {
@@ -403,7 +400,8 @@ func TestZ80Fuse(t *testing.T) {
 		}
 		cy := uint32(0)
 		for {
-			cy += computer.cpu.RunInstruction()
+			c, _ := computer.cpu.RunInstruction()
+			cy += c
 			if cy >= uint32(exp.state.tStates) {
 				break
 			}
@@ -413,38 +411,37 @@ func TestZ80Fuse(t *testing.T) {
 }
 
 func setComputerState(test Z80TestIn) {
-	state := z80.CPU{
-		A:                 byte(test.registers.AF >> 8),
-		B:                 byte(test.registers.BC >> 8),
-		C:                 byte(test.registers.BC),
-		D:                 byte(test.registers.DE >> 8),
-		E:                 byte(test.registers.DE),
-		H:                 byte(test.registers.HL >> 8),
-		L:                 byte(test.registers.HL),
-		AAlt:              byte(test.registers.AFa >> 8),
-		BAlt:              byte(test.registers.BCa >> 8),
-		CAlt:              byte(test.registers.BCa),
-		DAlt:              byte(test.registers.DEa >> 8),
-		EAlt:              byte(test.registers.DEa),
-		HAlt:              byte(test.registers.HLa >> 8),
-		LAlt:              byte(test.registers.HLa),
-		IX:                test.registers.IX,
-		IY:                test.registers.IY,
-		I:                 test.state.I,
-		R:                 test.state.R,
-		SP:                test.registers.SP,
-		PC:                test.registers.PC,
-		Flags:             z80.GetFlags(byte(test.registers.AF)),
-		FlagsAlt:          z80.GetFlags(byte(test.registers.AFa)),
-		IMode:             test.state.IM,
-		Iff1:              test.state.IFF1,
-		Iff2:              test.state.IFF2,
-		Halted:            test.state.isHalted,
-		DoDelayedDI:       false,
-		DoDelayedEI:       false,
-		CycleCount:        0,
-		InterruptOccurred: false,
-		MemPtr:            test.registers.MemPtr,
+	state := z80go.CPU{
+		A:           byte(test.registers.AF >> 8),
+		B:           byte(test.registers.BC >> 8),
+		C:           byte(test.registers.BC),
+		D:           byte(test.registers.DE >> 8),
+		E:           byte(test.registers.DE),
+		H:           byte(test.registers.HL >> 8),
+		L:           byte(test.registers.HL),
+		AAlt:        byte(test.registers.AFa >> 8),
+		BAlt:        byte(test.registers.BCa >> 8),
+		CAlt:        byte(test.registers.BCa),
+		DAlt:        byte(test.registers.DEa >> 8),
+		EAlt:        byte(test.registers.DEa),
+		HAlt:        byte(test.registers.HLa >> 8),
+		LAlt:        byte(test.registers.HLa),
+		IX:          test.registers.IX,
+		IY:          test.registers.IY,
+		I:           test.state.I,
+		R:           test.state.R,
+		SP:          test.registers.SP,
+		PC:          test.registers.PC,
+		Flags:       *z80go.NewFlags(byte(test.registers.AF)),
+		FlagsAlt:    *z80go.NewFlags(byte(test.registers.AFa)),
+		IMode:       test.state.IM,
+		Iff1:        test.state.IFF1,
+		Iff2:        test.state.IFF2,
+		Halted:      test.state.isHalted,
+		CycleCount:  0,
+		IntOccurred: false,
+		NmiOccurred: false,
+		MemPtr:      test.registers.MemPtr,
 	}
 
 	// Setup CPU
@@ -577,12 +574,12 @@ func checkComputerState(t *testing.T, name string) {
 	}
 
 	// FLAGS
-	if lo(exp.registers.AF) != state.Flags.GetFlags() {
-		t.Errorf("%s:  Expected Flags to be %08b, got %08b", name, lo(exp.registers.AF), state.Flags.GetFlags())
+	if lo(exp.registers.AF) != state.Flags.AsByte() {
+		t.Errorf("%s:  Expected Flags to be %08b, got %08b", name, lo(exp.registers.AF), state.Flags.AsByte())
 	}
 
-	if lo(exp.registers.AFa) != state.FlagsAlt.GetFlags() {
-		t.Errorf("%s:  Expected Flags' to be %08b, got %08b", name, lo(exp.registers.AFa), state.FlagsAlt.GetFlags())
+	if lo(exp.registers.AFa) != state.FlagsAlt.AsByte() {
+		t.Errorf("%s:  Expected Flags' to be %08b, got %08b", name, lo(exp.registers.AFa), state.FlagsAlt.AsByte())
 	}
 
 	// Check memory

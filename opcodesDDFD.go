@@ -96,11 +96,11 @@ func (z *CPU) execOpcodeDDFD(opcode byte, iz *uint16) {
 	case 0x2A:
 		addr := z.nextW()
 		*iz = z.rw(addr) // ld iz,(**)
-		z.memPtr = addr + 1
+		z.MemPtr = addr + 1
 	case 0x22:
 		addr := z.nextW()
 		z.ww(addr, *iz) // ld (**),iz
-		z.memPtr = addr + 1
+		z.MemPtr = addr + 1
 	case 0x21:
 		*iz = z.nextW() // ld iz,**
 	case 0x36:
@@ -192,7 +192,7 @@ func (z *CPU) execOpcodeDDFD(opcode byte, iz *uint16) {
 		val := z.rw(z.SP)
 		z.ww(z.SP, *iz)
 		*iz = val
-		z.memPtr = val
+		z.MemPtr = val
 	case 0xCB:
 		addr := z.displace(*iz, z.nextB())
 		op := z.nextB()

@@ -59,52 +59,78 @@ type FlagsType struct {
 
 // CPU - Processor state
 type CPU struct {
-	A                    byte      `json:"a,omitempty"`
-	B                    byte      `json:"b,omitempty"`
-	C                    byte      `json:"c,omitempty"`
-	D                    byte      `json:"d,omitempty"`
-	E                    byte      `json:"e,omitempty"`
-	H                    byte      `json:"h,omitempty"`
-	L                    byte      `json:"l,omitempty"`
-	AAlt                 byte      `json:"AAlt,omitempty"`
-	BAlt                 byte      `json:"BAlt,omitempty"`
-	CAlt                 byte      `json:"CAlt,omitempty"`
-	DAlt                 byte      `json:"DAlt,omitempty"`
-	EAlt                 byte      `json:"EAlt,omitempty"`
-	HAlt                 byte      `json:"HAlt,omitempty"`
-	LAlt                 byte      `json:"LAlt,omitempty"`
-	IX                   uint16    `json:"IX,omitempty"`
-	IY                   uint16    `json:"IY,omitempty"`
-	I                    byte      `json:"i,omitempty"`
-	R                    byte      `json:"r,omitempty"`
-	SP                   uint16    `json:"SP,omitempty"`
-	PC                   uint16    `json:"PC,omitempty"`
-	Flags                FlagsType `json:"flags"`
-	FlagsAlt             FlagsType `json:"flagsAlt"`
-	IMode                byte      `json:"IMode,omitempty"`
-	Iff1                 bool      `json:"iff1,omitempty"`
-	Iff2                 bool      `json:"iff2,omitempty"`
-	Halted               bool      `json:"halted,omitempty"`
-	CycleCount           uint32    `json:"cycleCount,omitempty"`
-	IntOccurred          bool      `json:"intOccurred,omitempty"`
-	NmiOccurred          bool      `json:"interruptOccurred,omitempty"`
-	memPtr               uint16
-	core                 MemIoRW
-	intData              byte
-	cycleCount           uint32 // cycle count (t-states)
-	memAccess            map[uint16]byte
-	codeCoverageEnabled  bool
-	codeCoverage         map[uint16]bool
+	// base register set
+	A byte `json:"a,omitempty"`
+	B byte `json:"b,omitempty"`
+	C byte `json:"c,omitempty"`
+	D byte `json:"d,omitempty"`
+	E byte `json:"e,omitempty"`
+	H byte `json:"h,omitempty"`
+	L byte `json:"l,omitempty"`
+	// alternate register set
+	AAlt byte `json:"AAlt,omitempty"`
+	BAlt byte `json:"BAlt,omitempty"`
+	CAlt byte `json:"CAlt,omitempty"`
+	DAlt byte `json:"DAlt,omitempty"`
+	EAlt byte `json:"EAlt,omitempty"`
+	HAlt byte `json:"HAlt,omitempty"`
+	LAlt byte `json:"LAlt,omitempty"`
+	// index registers
+	IX uint16 `json:"IX,omitempty"`
+	IY uint16 `json:"IY,omitempty"`
+
+	I byte `json:"i,omitempty"`
+
+	// memory refresh register
+	R byte `json:"r,omitempty"`
+
+	// stack pointer
+	SP uint16 `json:"SP,omitempty"`
+
+	// program counter
+	PC uint16 `json:"PC,omitempty"`
+
+	// cpu flags
+	Flags FlagsType `json:"flags"`
+
+	// alternate cpu flags
+	FlagsAlt FlagsType `json:"flagsAlt"`
+
+	// Interrupt mode
+	IMode       byte   `json:"IMode,omitempty"`
+	Iff1        bool   `json:"iff1,omitempty"`
+	Iff2        bool   `json:"iff2,omitempty"`
+	Halted      bool   `json:"halted,omitempty"`
+	CycleCount  uint32 `json:"cycleCount,omitempty"`
+	IntOccurred bool   `json:"intOccurred,omitempty"`
+	NmiOccurred bool   `json:"interruptOccurred,omitempty"`
+	// mw hidden register
+	MemPtr uint16
+
+	// methods to access CPU to memory and IO ports of computer
+	core    MemIoRW
+	intData byte
+	// Total CPU cycle count (t-states)
+	cycleCount uint32
+	// map of memory access
+	memAccess map[uint16]byte
+	// enable or disable code coverage marking
+	codeCoverageEnabled bool
+	// map of code coverage
+	codeCoverage map[uint16]bool
+	// enable of disable stack data marking
 	extendedStackEnabled bool
-	extendedStack        map[uint16]PushValueType
-	iffDelay             byte
-	intPending           bool
-	nmiPending           bool
+	// map of stack data marking
+	extendedStack map[uint16]PushValueType
+
+	iffDelay   byte
+	intPending bool
+	nmiPending bool
 }
 
-// Flags - return flags as byte value
+// AsByte - return flags as byte value
 // Used to simplify manipulations with AF register from debugger
-func (f *FlagsType) Flags() byte {
+func (f *FlagsType) AsByte() byte {
 	var flags byte = 0
 	if f.S {
 		flags |= 0x80
@@ -174,19 +200,19 @@ func (z *CPU) IIFStr() string {
 	return string(flags)
 }
 
-//// Flags - return state of CPU flags
-//func Flags(f byte) FlagsType {
-//	return FlagsType{
-//		S: f&0x80 != 0,
-//		Z: f&0x40 != 0,
-//		Y: f&0x20 != 0,
-//		H: f&0x10 != 0,
-//		X: f&0x08 != 0,
-//		P: f&0x04 != 0,
-//		N: f&0x02 != 0,
-//		C: f&0x01 != 0,
-//	}
-//}
+// NewFlags  build new object of FlagsType from byte
+func NewFlags(f byte) *FlagsType {
+	return &FlagsType{
+		S: f&0x80 != 0,
+		Z: f&0x40 != 0,
+		Y: f&0x20 != 0,
+		H: f&0x10 != 0,
+		X: f&0x08 != 0,
+		P: f&0x04 != 0,
+		N: f&0x02 != 0,
+		C: f&0x01 != 0,
+	}
+}
 
 // SetFlags - set CPU flags by flags byte.
 // Used to simplify manipulations with AF register from debugger

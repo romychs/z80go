@@ -22,6 +22,7 @@ func NewCPU(core MemIoRW) *CPU {
 	// z.codeCoverage         map[uint16]bool
 	z.extendedStackEnabled = false
 	//z.extendedStack        [65536]uint8
+	z.extendedStack = map[uint16]PushValueType{}
 	return &z
 }
 
@@ -68,15 +69,10 @@ func (z *CPU) SetState(state *CPU) {
 	z.I = state.I
 	z.R = state.R
 
-	z.Flags.S = state.Flags.S
-	z.Flags.Z = state.Flags.Z
-	z.Flags.Y = state.Flags.Y
-	z.Flags.H = state.Flags.H
-	z.Flags.X = state.Flags.X
-	z.Flags.P = state.Flags.P
-	z.Flags.N = state.Flags.N
-	z.Flags.C = state.Flags.C
+	z.Flags = state.Flags
+	z.FlagsAlt = state.FlagsAlt
 
+	z.MemPtr = state.MemPtr
 	z.IMode = state.IMode
 	z.Iff1 = state.Iff1
 	z.Iff2 = state.Iff2
@@ -108,8 +104,8 @@ func (z *CPU) GetState() *CPU {
 		SP: z.SP,
 		PC: z.PC,
 
-		Flags:       z.flags(),
-		FlagsAlt:    z.altFlags(),
+		Flags:       z.Flags,
+		FlagsAlt:    z.FlagsAlt,
 		IMode:       z.IMode,
 		Iff1:        z.Iff1,
 		Iff2:        z.Iff2,
@@ -117,7 +113,7 @@ func (z *CPU) GetState() *CPU {
 		CycleCount:  z.cycleCount,
 		IntOccurred: z.IntOccurred,
 		NmiOccurred: z.NmiOccurred,
-		memPtr:      z.memPtr,
+		MemPtr:      z.MemPtr,
 	}
 }
 
@@ -147,17 +143,18 @@ func (z *CPU) CodeCoverage() map[uint16]bool {
 func (z *CPU) SetExtendedStack(enabled bool) {
 	z.extendedStackEnabled = enabled
 	if enabled {
-		for addr := 0; addr < 65536; addr++ {
-			z.extendedStack[addr] = PushValueTypeDefault
-		}
+		clear(z.extendedStack)
+		//for addr := 0; addr < 65536; addr++ {
+		//	z.extendedStack[uint16(addr)] = PushValueTypeDefault
+		//}
 	}
 }
 
 // ExtendedStack - return array with markers of PushValueType* for each byte of memory
-func (z *CPU) ExtendedStack() ([]byte, error) {
+func (z *CPU) ExtendedStack() (map[uint16]PushValueType, error) {
 	var err error
 	if !z.extendedStackEnabled {
 		err = errors.New("error, z80: ExtendedStack disabled")
 	}
-	return z.extendedStack[:], err
+	return z.extendedStack, err
 }

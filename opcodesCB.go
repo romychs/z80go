@@ -63,7 +63,7 @@ func (z *CPU) execOpcodeCB(opcode byte) {
 
 		// in bit (hl), x/y flags are handled differently:
 		if z_ == 6 {
-			z.updateXY(byte(z.memPtr >> 8))
+			z.updateXY(byte(z.MemPtr >> 8))
 			z.cycleCount += 4
 		}
 

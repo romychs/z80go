@@ -191,7 +191,7 @@ func (z *CPU) Reset() {
 	z.SP = 0xFFFF
 	z.IX = 0
 	z.IY = 0
-	z.memPtr = 0
+	z.MemPtr = 0
 
 	z.A = 0xFF
 	z.B = 0
@@ -213,7 +213,7 @@ func (z *CPU) Reset() {
 	z.R = 0
 
 	z.Flags.SetFlags(0xff)
-	z.FlagsAlt.SetFlags(0xff)
+	z.FlagsAlt.SetFlags(0x00)
 
 	z.iffDelay = 0
 	z.IMode = 0
