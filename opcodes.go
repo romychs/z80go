@@ -86,7 +86,7 @@ func (z *CPU) addB(a byte, b byte, cy bool) byte {
 	return result
 }
 
-// SUBtract Byte: subtracts two bytes (with optional carry)
+// subB Subtract two bytes (with optional carry)
 func (z *CPU) subB(a byte, b byte, cy bool) byte {
 	val := z.addB(a, ^b, !cy)
 	z.Flags.C = !z.Flags.C
@@ -95,7 +95,7 @@ func (z *CPU) subB(a byte, b byte, cy bool) byte {
 	return val
 }
 
-// ADD Word: adds two words together
+// addW Adds two words together
 func (z *CPU) addW(a uint16, b uint16, cy bool) uint16 {
 	lsb := z.addB(byte(a), byte(b), cy)
 	msb := z.addB(byte(a>>8), byte(b>>8), z.Flags.C)
@@ -105,7 +105,7 @@ func (z *CPU) addW(a uint16, b uint16, cy bool) uint16 {
 	return result
 }
 
-// SUBtract Word: subtracts two words (with optional carry)
+// subW Subtracts two words (with optional carry)
 func (z *CPU) subW(a uint16, b uint16, cy bool) uint16 {
 	lsb := z.subB(byte(a), byte(b), cy)
 	msb := z.subB(byte(a>>8), byte(b>>8), z.Flags.C)
@@ -115,7 +115,7 @@ func (z *CPU) subW(a uint16, b uint16, cy bool) uint16 {
 	return result
 }
 
-// Adds A word to HL
+// addHL Adds A word to HL
 func (z *CPU) addHL(val uint16) {
 	sf := z.Flags.S
 	zf := z.Flags.Z
@@ -893,19 +893,19 @@ func (z *CPU) execOpcode(opcode byte) {
 		z.Halted = true // halt
 		z.PC--
 	case 0x3C:
-		z.A = z.inc(z.A) // inc a
+		z.A = z.inc(z.A)
 	case 0x04:
-		z.B = z.inc(z.B) // inc b
+		z.B = z.inc(z.B)
 	case 0x0C:
-		z.C = z.inc(z.C) // inc c
+		z.C = z.inc(z.C)
 	case 0x14:
-		z.D = z.inc(z.D) // inc d
+		z.D = z.inc(z.D)
 	case 0x1C:
-		z.E = z.inc(z.E) // inc e
+		z.E = z.inc(z.E)
 	case 0x24:
-		z.H = z.inc(z.H) // inc h
+		z.H = z.inc(z.H)
 	case 0x2C:
-		z.L = z.inc(z.L) // inc l
+		z.L = z.inc(z.L)
 	case 0x34:
 		// inc (hl)
 		result := z.inc(z.rb(z.hl()))
@@ -965,14 +965,14 @@ func (z *CPU) execOpcode(opcode byte) {
 		z.Flags.N = false
 		z.updateXY(z.A | z.f())
 	case 0x07:
-		// rlca (rotate left)
+		// Rotate left
 		z.Flags.C = z.A&0x80 != 0
 		z.A = (z.A << 1) | bToByte(z.Flags.C)
 		z.Flags.N = false
 		z.Flags.H = false
 		z.updateXY(z.A)
 	case 0x0F:
-		// rrca (rotate right)
+		// Rotate right
 		z.Flags.C = z.A&1 != 0
 		z.A = (z.A >> 1) | (bToByte(z.Flags.C) << 7)
 		z.Flags.N = false
@@ -1052,19 +1052,19 @@ func (z *CPU) execOpcode(opcode byte) {
 		z.lOr(z.nextB()) // or *
 
 	case 0xBF:
-		z.cp(z.A) // cp a
+		z.cp(z.A)
 	case 0xB8:
-		z.cp(z.B) // cp b
+		z.cp(z.B)
 	case 0xB9:
-		z.cp(z.C) // cp c
+		z.cp(z.C)
 	case 0xBA:
-		z.cp(z.D) // cp d
+		z.cp(z.D)
 	case 0xBB:
-		z.cp(z.E) // cp e
+		z.cp(z.E)
 	case 0xBC:
-		z.cp(z.H) // cp h
+		z.cp(z.H)
 	case 0xBD:
-		z.cp(z.L) // cp l
+		z.cp(z.L)
 	case 0xBE:
 		z.cp(z.rb(z.hl())) // cp (hl)
 	case 0xFE:

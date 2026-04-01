@@ -24,7 +24,7 @@ func (t *TestComp) IORead(port uint16) byte {
 }
 
 func (t *TestComp) IOWrite(port uint16, val byte) {
-	//
+	print("PORT[0x%04X]=0x%04X\n", port, val)
 }
 
 var testComp *TestComp
@@ -51,7 +51,7 @@ func Test_LD_SP_nn(t *testing.T) {
 	setMemory(0x100, test)
 	res := disasm.Disassm(0x100)
 	if res != expected {
-		t.Errorf("Error disasm LD SP, nn, result '%s', expected '%s'", res, expected)
+		t.Errorf("Error disassm LD SP, nn, result '%s', expected '%s'", res, expected)
 	}
 }
 
@@ -60,7 +60,7 @@ func Test_LD_DE_nn(t *testing.T) {
 	setMemory(0x100, test)
 	res := disasm.Disassm(0x103)
 	if res != expected {
-		t.Errorf("Error disasm LD DE, nn, result '%s', expected '%s'", res, expected)
+		t.Errorf("Error disassm LD DE, nn, result '%s', expected '%s'", res, expected)
 	}
 }
 
@@ -69,7 +69,7 @@ func Test_LD_C_n(t *testing.T) {
 	setMemory(0x100, test)
 	res := disasm.Disassm(0x106)
 	if res != expected {
-		t.Errorf("Error disasm LD C, n, result '%s', expected '%s'", res, expected)
+		t.Errorf("Error disassm LD C, n, result '%s', expected '%s'", res, expected)
 	}
 }
 
@@ -78,7 +78,7 @@ func Test_CALL_nn(t *testing.T) {
 	setMemory(0x100, test)
 	res := disasm.Disassm(0x108)
 	if res != expected {
-		t.Errorf("Error disasm CALL nn, result '%s', expected '%s'", res, expected)
+		t.Errorf("Error disassm CALL nn, result '%s', expected '%s'", res, expected)
 	}
 }
 
@@ -87,6 +87,6 @@ func Test_JP_nn(t *testing.T) {
 	setMemory(0x100, test)
 	res := disasm.Disassm(0x10b)
 	if res != expected {
-		t.Errorf("Error disasm JP nn, result '%s', expected '%s'", res, expected)
+		t.Errorf("Error disassm JP nn, result '%s', expected '%s'", res, expected)
 	}
 }
