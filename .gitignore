@@ -1,0 +1,7 @@
+*.bak
+*.lst
+*.tmp
+*.sh
+.vscode/
+.idea/
+src/.idea/
