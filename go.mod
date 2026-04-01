@@ -1,6 +1,6 @@
 module github.com/romychs/z80go
 
-go 1.25
+go 1.24
 
 require github.com/sirupsen/logrus v1.9.4
 
