@@ -16,10 +16,9 @@ func NewCPU(core MemIoRW) *CPU {
 	z.core = core
 	z.cycleCount = 0
 	z.codeCoverageEnabled = false
-	// z.codeCoverage = make(map[uint16]bool)
 	// z.memAccess =
 	z.codeCoverageEnabled = false
-	// z.codeCoverage         map[uint16]bool
+	z.codeCoverage = map[uint16]bool{}
 	z.extendedStackEnabled = false
 	//z.extendedStack        [65536]uint8
 	z.extendedStack = map[uint16]PushValueType{}
