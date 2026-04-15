@@ -90,3 +90,25 @@ func Test_JP_nn(t *testing.T) {
 		t.Errorf("Error disassm JP nn, result '%s', expected '%s'", res, expected)
 	}
 }
+
+var testJRf = []byte{0x28, 0x09} // JR Z,+9
+
+func Test_JR_Z_nn(t *testing.T) {
+	expected := "  31EF JR Z, 0x31FA" // PC+2+9
+	setMemory(0x31EF, testJRf)
+	res := disasm.Disassm(0x31EF)
+	if res != expected {
+		t.Errorf("Error disassm JR Z,nn, result '%s', expected '%s'", res, expected)
+	}
+}
+
+var testJRb = []byte{0x18, 0xf1} // JR Z,+9
+
+func Test_JR_mnn(t *testing.T) {
+	expected := "  31F8 JR 0x31EB" // JR back
+	setMemory(0x31F8, testJRb)
+	res := disasm.Disassm(0x31F8)
+	if res != expected {
+		t.Errorf("Error disassm JR -nn, result '%s', expected '%s'", res, expected)
+	}
+}

@@ -39,12 +39,12 @@ func (d *Disassembler) jp(op, cond string) string {
 }
 
 func (d *Disassembler) jr(op, cond string) string {
-	addr := d.pc
+	addr := d.pc + 1
 	offset := d.getByte()
 	if offset&0x80 != 0 {
 		addr += 0xFF00 | uint16(offset)
 	} else {
-		addr += d.pc + uint16(offset)
+		addr += uint16(offset)
 	}
 	if cond != "" {
 		cond += sep
