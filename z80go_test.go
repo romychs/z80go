@@ -593,3 +593,23 @@ func checkComputerState(t *testing.T, name string) {
 		}
 	}
 }
+
+func setMemory(addr uint16, value []byte) {
+	for i := 0; i < len(value); i++ {
+		computer.memory[addr+uint16(i)] = value[i]
+	}
+}
+
+var testJRm = []byte{0x70, 0x7d, 0xb3, 0x3c, 0x28, 0x09, 0xb3, 0xab, 0x4f, 0x7d, 0xa3, 0xb1, 0x6f, 0x18, 0xf1, 0x7d}
+
+func TestZ80_JR_mnn(t *testing.T) {
+	setMemory(0x31eb, testJRm)
+	state := computer.cpu.GetState()
+	state.PC = 0x31F8
+	computer.cpu.SetState(state)
+	computer.cpu.RunInstruction()
+	expected := uint16(0x31EB)
+	if computer.cpu.PC != expected {
+		t.Errorf("Error JR -nn, result PC=0x%04X, expected: 0x%04X", computer.cpu.PC, expected)
+	}
+}

@@ -1093,7 +1093,13 @@ func (z *CPU) execOpcode(opcode byte) {
 		z.B--
 		z.condJr(z.B != 0) // djnz *
 	case 0x18:
-		z.PC += uint16(z.nextB()) // jr *
+		// jr *
+		offset := z.nextB()
+		if offset&0x80 == 0 {
+			z.PC += uint16(offset)
+		} else {
+			z.PC += 0xFF00 | uint16(offset)
+		}
 		z.MemPtr = z.PC
 	case 0x20:
 		z.condJr(!z.Flags.Z) // jr nz, *
