@@ -354,15 +354,16 @@ func (d *Disassembler) getRel() string {
 }
 
 var shiftOps = []string{"RLC", "RRC", "RL", "RR", "SLA", "SRA", "SLL", "SRL"}
+var bitOps = []string{"BIT", "RES", "SET"}
 
 // opocodeCB disassemble Z80 Opcodes, with CB first byte
 func (d *Disassembler) opocodeCB() string {
 	op := ""
 	opcode := d.getByte()
 	if opcode <= 0x3F {
-		op = shiftOps[opcode>>3&0x07] + operands[opcode&0x7]
+		op = shiftOps[opcode>>3&0x07] + sep + operands[opcode&0x7]
 	} else {
-		op = shiftOps[(opcode>>6&0x03)-1] + operands[opcode&0x7]
+		op = bitOps[(opcode>>6&0x03)-1] + " " + string(rune(48+(opcode>>3)&0x07)) + sep + operands[opcode&0x7]
 	}
 	return op
 }

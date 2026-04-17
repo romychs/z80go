@@ -129,3 +129,26 @@ func Test_LD_r_IXn(t *testing.T) {
 		t.Errorf("Error disassm LD_r_IXn, result '%s', expected '%s'", res, expected)
 	}
 }
+
+var testBITnH = []byte{0xcb, 0x64, 0xcb, 0xde, 0xcb, 0x95}
+
+func Test_BIT_nn(t *testing.T) {
+	expected := "  0000 BIT 4, H" // JR back
+	setMemory(0x0000, testBITnH)
+	res := disasm.Disassm(0x0000)
+	if res != expected {
+		t.Errorf("Error disassm BIT n,H, result '%s', expected '%s'", res, expected)
+	}
+
+	expected = "  0002 SET 3, (HL)" // JR back
+	res = disasm.Disassm(0x0002)
+	if res != expected {
+		t.Errorf("Error disassm SET n,(HL), result '%s', expected '%s'", res, expected)
+	}
+
+	expected = "  0004 RES 2, L" // JR back
+	res = disasm.Disassm(0x0004)
+	if res != expected {
+		t.Errorf("Error disassm RES n,(HL), result '%s', expected '%s'", res, expected)
+	}
+}
