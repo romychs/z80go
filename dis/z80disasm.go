@@ -401,16 +401,52 @@ func (d *Disassembler) opocodeDD(op byte) string {
 		result = "LD (ii" + d.getRel() + ")" + sep + "n"
 	case 0x39:
 		result = "ADD ii" + sep + "SP"
+
+	case 0x44:
+		result = "LD B" + sep + "iiH"
+	case 0x45:
+		result = "LD B" + sep + "iiL"
 	case 0x46:
 		result = "LD B" + sep + "(ii" + d.getRel() + ")"
+
+	case 0x4C:
+		result = "LD C" + sep + "iiH"
+	case 0x4D:
+		result = "LD C" + sep + "iiL"
 	case 0x4E:
 		result = "LD C" + sep + "(ii" + d.getRel() + ")"
+
+	case 0x54:
+		result = "LD D" + sep + "iiH"
+	case 0x55:
+		result = "LD D" + sep + "iiL"
 	case 0x56:
 		result = "LD D" + sep + "(ii" + d.getRel() + ")"
+
+	case 0x5C:
+		result = "LD E" + sep + "iiH"
+	case 0x5D:
+		result = "LD E" + sep + "iiL"
 	case 0x5E:
 		result = "LD E" + sep + "(ii" + d.getRel() + ")"
+
+	case 0x62:
+		result = "LD iiH" + sep + "D"
+
+	case 0x65:
+		result = "LD IXH" + sep + "IXL"
+
 	case 0x66:
 		result = "LD H" + sep + "(ii" + d.getRel() + ")"
+
+	case 0x6A:
+		result = "LD iiL" + sep + "D"
+	case 0x6B:
+		result = "LD iiL" + sep + "E"
+
+	case 0x6C:
+		result = "LD IXL" + sep + "IXH"
+
 	case 0x6E:
 		result = "LD L" + sep + "(ii" + d.getRel() + ")"
 	case 0x70:
@@ -427,8 +463,14 @@ func (d *Disassembler) opocodeDD(op byte) string {
 		result = "LD (ii" + d.getRel() + ")" + sep + "L"
 	case 0x77:
 		result = "LD (ii" + d.getRel() + ")" + sep + "A"
+
+	case 0x7C:
+		result = "LD A" + sep + "iiH"
+	case 0x7D:
+		result = "LD A" + sep + "iiL"
 	case 0x7E:
 		result = "LD A" + sep + "(ii" + d.getRel() + ")"
+
 	case 0x86:
 		result = "ADD A" + sep + "(ii" + d.getRel() + ")"
 	case 0x8E:

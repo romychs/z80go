@@ -112,3 +112,20 @@ func Test_JR_mnn(t *testing.T) {
 		t.Errorf("Error disassm JR -nn, result '%s', expected '%s'", res, expected)
 	}
 }
+
+var testLDrIXn = []byte{0xdd, 0x55, 0xdd, 0x7c}
+
+func Test_LD_r_IXn(t *testing.T) {
+	expected := "  0100 LD D, IXL"
+	setMemory(0x0100, testLDrIXn)
+	res := disasm.Disassm(0x0100)
+	if res != expected {
+		t.Errorf("Error disassm LD_r_IXn, result '%s', expected '%s'", res, expected)
+	}
+
+	expected = "  0102 LD A, IXH"
+	res = disasm.Disassm(0x0102)
+	if res != expected {
+		t.Errorf("Error disassm LD_r_IXn, result '%s', expected '%s'", res, expected)
+	}
+}
