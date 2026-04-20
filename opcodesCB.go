@@ -29,7 +29,7 @@ func (z *CPU) execOpcodeCB(opcode byte) {
 	case 5:
 		reg = &z.L
 	case 6:
-		hl = z.rb(z.hl())
+		hl = z.rb(z.GetHL())
 		reg = &hl
 	case 7:
 		reg = &z.A
@@ -78,7 +78,7 @@ func (z *CPU) execOpcodeCB(opcode byte) {
 	}
 
 	if reg == &hl {
-		z.wb(z.hl(), hl)
+		z.wb(z.GetHL(), hl)
 	}
 }
 
@@ -146,7 +146,7 @@ func (z *CPU) execOpcodeDcb(opcode byte, addr uint16) {
 			z.L = result
 		// always false
 		//case 6:
-		//	z.wb(z.hl(), result)
+		//	z.wb(z.GetHL(), result)
 		case 7:
 			z.A = result
 		}

@@ -43,6 +43,11 @@ type CPUInterface interface {
 	SetState(state *CPU)
 	// DebugOutput out current CPU state
 	DebugOutput()
+	// GenNMI Generate NMI
+	GenNMI()
+	// GenINT Generate INT,
+	// data - data bus low address for IM2 mode
+	GenINT(data byte)
 }
 
 // FlagsType - Processor flags
@@ -230,4 +235,24 @@ func (f *FlagsType) SetFlags(flags byte) {
 // GetPC - return PC register value only, for fast breakpoints test from debugger
 func (z *CPU) GetPC() uint16 {
 	return z.PC
+}
+
+// GetSP - return stack pointer
+func (z *CPU) GetSP() uint16 {
+	return z.SP
+}
+
+// GetBC - return BC register pair
+func (z *CPU) GetBC() uint16 {
+	return (uint16(z.B) << 8) | uint16(z.C)
+}
+
+// GetDE - return DE register pair
+func (z *CPU) GetDE() uint16 {
+	return (uint16(z.D) << 8) | uint16(z.E)
+}
+
+// GetHL - return HL register pair
+func (z *CPU) GetHL() uint16 {
+	return (uint16(z.H) << 8) | uint16(z.L)
 }

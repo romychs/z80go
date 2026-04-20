@@ -66,16 +66,16 @@ func (z *CPU) condJr(condition bool) {
 	}
 }
 
-func bToByte(cond bool) byte {
+func BToByte(cond bool) byte {
 	if cond {
-		return byte(1)
+		return 1
 	}
-	return byte(0)
+	return 0
 }
 
 // ADD Byte: adds two bytes together
 func (z *CPU) addB(a byte, b byte, cy bool) byte {
-	result := a + b + bToByte(cy)
+	result := a + b + BToByte(cy)
 	z.Flags.S = result&0x80 != 0
 	z.Flags.Z = result == 0
 	z.Flags.H = carry(4, uint16(a), uint16(b), cy)
@@ -120,7 +120,7 @@ func (z *CPU) addHL(val uint16) {
 	sf := z.Flags.S
 	zf := z.Flags.Z
 	pf := z.Flags.P
-	result := z.addW(z.hl(), val, false)
+	result := z.addW(z.GetHL(), val, false)
 	z.setHL(result)
 	z.Flags.S = sf
 	z.Flags.Z = zf
@@ -141,7 +141,7 @@ func (z *CPU) addIZ(reg *uint16, val uint16) {
 
 // adcHL adds A word (+ carry) to HL
 func (z *CPU) adcHL(val uint16) {
-	result := z.addW(z.hl(), val, z.Flags.C)
+	result := z.addW(z.GetHL(), val, z.Flags.C)
 	z.Flags.S = result&0x8000 != 0
 	z.Flags.Z = result == 0
 	z.setHL(result)
@@ -149,7 +149,7 @@ func (z *CPU) adcHL(val uint16) {
 
 // sbcHL subtracts A word (+ carry) to HL
 func (z *CPU) sbcHL(val uint16) {
-	result := z.subW(z.hl(), val, z.Flags.C)
+	result := z.subW(z.GetHL(), val, z.Flags.C)
 	z.Flags.S = result&0x8000 != 0
 	z.Flags.Z = result == 0
 	z.setHL(result)
@@ -258,7 +258,7 @@ func (z *CPU) cbRrc(val byte) byte {
 func (z *CPU) cbRl(val byte) byte {
 	cf := z.Flags.C
 	z.Flags.C = val>>7 != 0
-	val = (val << 1) | bToByte(cf)
+	val = (val << 1) | BToByte(cf)
 	z.Flags.S = val&0x80 != 0
 	z.Flags.Z = val == 0
 	z.Flags.N = false
@@ -272,7 +272,7 @@ func (z *CPU) cbRl(val byte) byte {
 func (z *CPU) cbRr(val byte) byte {
 	c := z.Flags.C
 	z.Flags.C = (val & 1) != 0
-	val = (val >> 1) | (bToByte(c) << 7)
+	val = (val >> 1) | (BToByte(c) << 7)
 	z.Flags.S = val&0x80 != 0
 	z.Flags.Z = val == 0
 	z.Flags.N = false
@@ -348,14 +348,14 @@ func (z *CPU) cbBit(val byte, n byte) byte {
 }
 
 func (z *CPU) ldi() {
-	de := z.de()
-	hl := z.hl()
+	de := z.GetDE()
+	hl := z.GetHL()
 	val := z.rb(hl)
 	z.wb(de, val)
 
-	z.setHL(z.hl() + 1)
-	z.setDE(z.de() + 1)
-	z.setBC(z.bc() - 1)
+	z.setHL(z.GetHL() + 1)
+	z.setDE(z.GetDE() + 1)
+	z.setBC(z.GetBC() - 1)
 
 	// see https://wikiti.brandonw.net/index.php?title=Z80_Instruction_Set
 	// for the calculation of xf/yf on LDI
@@ -366,27 +366,27 @@ func (z *CPU) ldi() {
 
 	z.Flags.N = false
 	z.Flags.H = false
-	z.Flags.P = z.bc() > 0
+	z.Flags.P = z.GetBC() > 0
 
 }
 
 func (z *CPU) ldd() {
 	z.ldi()
 	// same as ldi but HL and DE are decremented instead of incremented
-	z.setHL(z.hl() - 2)
-	z.setDE(z.de() - 2)
+	z.setHL(z.GetHL() - 2)
+	z.setDE(z.GetDE() - 2)
 }
 
 func (z *CPU) cpi() {
 	cf := z.Flags.C
-	result := z.subB(z.A, z.rb(z.hl()), false)
-	z.setHL(z.hl() + 1)
-	z.setBC(z.bc() - 1)
+	result := z.subB(z.A, z.rb(z.GetHL()), false)
+	z.setHL(z.GetHL() + 1)
+	z.setBC(z.GetBC() - 1)
 
-	val := result - bToByte(z.Flags.H)
+	val := result - BToByte(z.Flags.H)
 	z.Flags.X = val&0x08 != 0
 	z.Flags.Y = val&0x02 != 0
-	z.Flags.P = z.bc() != 0
+	z.Flags.P = z.GetBC() != 0
 	z.Flags.C = cf
 	z.MemPtr += 1
 }
@@ -394,12 +394,12 @@ func (z *CPU) cpi() {
 func (z *CPU) cpd() {
 	z.cpi()
 	// same as cpi but HL is decremented instead of incremented
-	z.setHL(z.hl() - 2)
+	z.setHL(z.GetHL() - 2)
 	z.MemPtr -= 2
 }
 
 func (z *CPU) inRC(r *byte) {
-	*r = z.core.IORead(z.bc())
+	*r = z.core.IORead(z.GetBC())
 	z.Flags.Z = *r == 0
 	z.Flags.S = *r&0x80 != 0
 	z.Flags.P = parity(*r)
@@ -408,9 +408,9 @@ func (z *CPU) inRC(r *byte) {
 }
 
 func (z *CPU) ini() {
-	val := z.core.IORead(z.bc())
-	z.wb(z.hl(), val)
-	z.MemPtr = z.bc() + 1
+	val := z.core.IORead(z.GetBC())
+	z.wb(z.GetHL(), val)
+	z.MemPtr = z.GetBC() + 1
 	z.B--
 
 	other := val + z.C + 1
@@ -426,13 +426,13 @@ func (z *CPU) ini() {
 	z.Flags.S = z.B&0x80 != 0
 	z.Flags.Z = z.B == 0
 	z.updateXY(z.B)
-	z.setHL(z.hl() + 1)
+	z.setHL(z.GetHL() + 1)
 }
 
 func (z *CPU) ind() {
-	val := z.core.IORead(z.bc())
-	z.wb(z.hl(), val)
-	z.MemPtr = z.bc() - 1
+	val := z.core.IORead(z.GetBC())
+	z.wb(z.GetHL(), val)
+	z.MemPtr = z.GetBC() - 1
 	z.B--
 
 	other := val + z.C - 1
@@ -449,7 +449,7 @@ func (z *CPU) ind() {
 	z.Flags.S = z.B&0x80 != 0
 	z.Flags.Z = z.B == 0
 	z.updateXY(z.B)
-	z.setHL(z.hl() - 1)
+	z.setHL(z.GetHL() - 1)
 }
 func (z *CPU) outCmnFlags(val uint8) {
 	other := val + z.L
@@ -468,20 +468,20 @@ func (z *CPU) outCmnFlags(val uint8) {
 }
 
 func (z *CPU) outi() {
-	val := z.rb(z.hl())
+	val := z.rb(z.GetHL())
 	z.B--
-	z.MemPtr = z.bc() + 1
-	z.core.IOWrite(z.bc(), val)
-	z.setHL(z.hl() + 1)
+	z.MemPtr = z.GetBC() + 1
+	z.core.IOWrite(z.GetBC(), val)
+	z.setHL(z.GetHL() + 1)
 	z.outCmnFlags(val)
 }
 
 func (z *CPU) outd() {
-	val := z.rb(z.hl())
+	val := z.rb(z.GetHL())
 	z.B--
-	z.MemPtr = z.bc() - 1
-	z.core.IOWrite(z.bc(), val)
-	z.setHL(z.hl() - 1)
+	z.MemPtr = z.GetBC() - 1
+	z.core.IOWrite(z.GetBC(), val)
+	z.setHL(z.GetHL() - 1)
 	z.outCmnFlags(val)
 }
 
@@ -694,34 +694,34 @@ func (z *CPU) execOpcode(opcode byte) {
 		//z.l = z.l // ld l,l
 
 	case 0x7E:
-		z.A = z.rb(z.hl()) // ld a,(hl)
+		z.A = z.rb(z.GetHL()) // ld a,(hl)
 	case 0x46:
-		z.B = z.rb(z.hl()) // ld b,(hl)
+		z.B = z.rb(z.GetHL()) // ld b,(hl)
 	case 0x4E:
-		z.C = z.rb(z.hl()) // ld c,(hl)
+		z.C = z.rb(z.GetHL()) // ld c,(hl)
 	case 0x56:
-		z.D = z.rb(z.hl()) // ld d,(hl)
+		z.D = z.rb(z.GetHL()) // ld d,(hl)
 	case 0x5E:
-		z.E = z.rb(z.hl()) // ld e,(hl)
+		z.E = z.rb(z.GetHL()) // ld e,(hl)
 	case 0x66:
-		z.H = z.rb(z.hl()) // ld h,(hl)
+		z.H = z.rb(z.GetHL()) // ld h,(hl)
 	case 0x6E:
-		z.L = z.rb(z.hl()) // ld l,(hl)
+		z.L = z.rb(z.GetHL()) // ld l,(hl)
 
 	case 0x77:
-		z.wb(z.hl(), z.A) // ld (hl),a
+		z.wb(z.GetHL(), z.A) // ld (hl),a
 	case 0x70:
-		z.wb(z.hl(), z.B) // ld (hl),b
+		z.wb(z.GetHL(), z.B) // ld (hl),b
 	case 0x71:
-		z.wb(z.hl(), z.C) // ld (hl),c
+		z.wb(z.GetHL(), z.C) // ld (hl),c
 	case 0x72:
-		z.wb(z.hl(), z.D) // ld (hl),d
+		z.wb(z.GetHL(), z.D) // ld (hl),d
 	case 0x73:
-		z.wb(z.hl(), z.E) // ld (hl),e
+		z.wb(z.GetHL(), z.E) // ld (hl),e
 	case 0x74:
-		z.wb(z.hl(), z.H) // ld (hl),h
+		z.wb(z.GetHL(), z.H) // ld (hl),h
 	case 0x75:
-		z.wb(z.hl(), z.L) // ld (hl),l
+		z.wb(z.GetHL(), z.L) // ld (hl),l
 
 	case 0x3E:
 		z.A = z.nextB() // ld a,*
@@ -738,15 +738,15 @@ func (z *CPU) execOpcode(opcode byte) {
 	case 0x2E:
 		z.L = z.nextB() // ld l,*
 	case 0x36:
-		z.wb(z.hl(), z.nextB()) // ld (hl),*
+		z.wb(z.GetHL(), z.nextB()) // ld (hl),*
 	case 0x0A:
 		// ld a,(bc)
-		z.A = z.rb(z.bc())
-		z.MemPtr = z.bc() + 1
+		z.A = z.rb(z.GetBC())
+		z.MemPtr = z.GetBC() + 1
 	case 0x1A:
 		// ld a,(de)
-		z.A = z.rb(z.de())
-		z.MemPtr = z.de() + 1
+		z.A = z.rb(z.GetDE())
+		z.MemPtr = z.GetDE() + 1
 	case 0x3A:
 		// ld a,(**)
 		addr := z.nextW()
@@ -754,12 +754,12 @@ func (z *CPU) execOpcode(opcode byte) {
 		z.MemPtr = addr + 1
 	case 0x02:
 		// ld (bc),a
-		z.wb(z.bc(), z.A)
-		z.MemPtr = (uint16(z.A) << 8) | ((z.bc() + 1) & 0xFF)
+		z.wb(z.GetBC(), z.A)
+		z.MemPtr = (uint16(z.A) << 8) | ((z.GetBC() + 1) & 0xFF)
 	case 0x12:
 		// ld (de),a
-		z.wb(z.de(), z.A)
-		z.MemPtr = (uint16(z.A) << 8) | ((z.de() + 1) & 0xFF)
+		z.wb(z.GetDE(), z.A)
+		z.MemPtr = (uint16(z.A) << 8) | ((z.GetDE() + 1) & 0xFF)
 	case 0x32:
 		// ld (**),a
 		addr := z.nextW()
@@ -782,20 +782,20 @@ func (z *CPU) execOpcode(opcode byte) {
 	case 0x22:
 		// ld (**),hl
 		addr := z.nextW()
-		z.ww(addr, z.hl())
+		z.ww(addr, z.GetHL())
 		z.MemPtr = addr + 1
 	case 0xF9:
-		z.SP = z.hl() // ld sp,hl
+		z.SP = z.GetHL() // ld sp,hl
 
 	case 0xEB:
 		// ex de,hl
-		de := z.de()
-		z.setDE(z.hl())
+		de := z.GetDE()
+		z.setDE(z.GetHL())
 		z.setHL(de)
 	case 0xE3:
 		// ex (sp),hl
 		val := z.rw(z.SP)
-		z.ww(z.SP, z.hl())
+		z.ww(z.SP, z.GetHL())
 		z.setHL(val)
 		z.MemPtr = val
 	case 0x87:
@@ -813,7 +813,7 @@ func (z *CPU) execOpcode(opcode byte) {
 	case 0x85:
 		z.A = z.addB(z.A, z.L, false) // add a,l
 	case 0x86:
-		z.A = z.addB(z.A, z.rb(z.hl()), false) // add a,(hl)
+		z.A = z.addB(z.A, z.rb(z.GetHL()), false) // add a,(hl)
 	case 0xC6:
 		z.A = z.addB(z.A, z.nextB(), false) // add a,*
 
@@ -832,7 +832,7 @@ func (z *CPU) execOpcode(opcode byte) {
 	case 0x8D:
 		z.A = z.addB(z.A, z.L, z.Flags.C) // adc a,l
 	case 0x8E:
-		z.A = z.addB(z.A, z.rb(z.hl()), z.Flags.C) // adc a,(hl)
+		z.A = z.addB(z.A, z.rb(z.GetHL()), z.Flags.C) // adc a,(hl)
 	case 0xCE:
 		z.A = z.addB(z.A, z.nextB(), z.Flags.C) // adc a,*
 
@@ -851,7 +851,7 @@ func (z *CPU) execOpcode(opcode byte) {
 	case 0x95:
 		z.A = z.subB(z.A, z.L, false) // sub a,l
 	case 0x96:
-		z.A = z.subB(z.A, z.rb(z.hl()), false) // sub a,(hl)
+		z.A = z.subB(z.A, z.rb(z.GetHL()), false) // sub a,(hl)
 	case 0xD6:
 		z.A = z.subB(z.A, z.nextB(), false) // sub a,*
 
@@ -870,16 +870,16 @@ func (z *CPU) execOpcode(opcode byte) {
 	case 0x9D:
 		z.A = z.subB(z.A, z.L, z.Flags.C) // sbc a,l
 	case 0x9E:
-		z.A = z.subB(z.A, z.rb(z.hl()), z.Flags.C) // sbc a,(hl)
+		z.A = z.subB(z.A, z.rb(z.GetHL()), z.Flags.C) // sbc a,(hl)
 	case 0xDE:
 		z.A = z.subB(z.A, z.nextB(), z.Flags.C) // sbc a,*
 
 	case 0x09:
-		z.addHL(z.bc()) // add hl,bc
+		z.addHL(z.GetBC()) // add hl,bc
 	case 0x19:
-		z.addHL(z.de()) // add hl,de
+		z.addHL(z.GetDE()) // add hl,de
 	case 0x29:
-		z.addHL(z.hl()) // add hl,hl
+		z.addHL(z.GetHL()) // add hl,hl
 	case 0x39:
 		z.addHL(z.SP) // add hl,sp
 
@@ -908,8 +908,8 @@ func (z *CPU) execOpcode(opcode byte) {
 		z.L = z.inc(z.L)
 	case 0x34:
 		// inc (hl)
-		result := z.inc(z.rb(z.hl()))
-		z.wb(z.hl(), result)
+		result := z.inc(z.rb(z.GetHL()))
+		z.wb(z.GetHL(), result)
 	case 0x3D:
 		z.A = z.dec(z.A) // dec a
 	case 0x05:
@@ -926,22 +926,22 @@ func (z *CPU) execOpcode(opcode byte) {
 		z.L = z.dec(z.L) // dec l
 	case 0x35:
 		// dec (hl)
-		result := z.dec(z.rb(z.hl()))
-		z.wb(z.hl(), result)
+		result := z.dec(z.rb(z.GetHL()))
+		z.wb(z.GetHL(), result)
 	case 0x03:
-		z.setBC(z.bc() + 1) // inc bc
+		z.setBC(z.GetBC() + 1) // inc bc
 	case 0x13:
-		z.setDE(z.de() + 1) // inc de
+		z.setDE(z.GetDE() + 1) // inc de
 	case 0x23:
-		z.setHL(z.hl() + 1) // inc hl
+		z.setHL(z.GetHL() + 1) // inc hl
 	case 0x33:
 		z.SP = z.SP + 1 // inc sp
 	case 0x0B:
-		z.setBC(z.bc() - 1) // dec bc
+		z.setBC(z.GetBC() - 1) // dec bc
 	case 0x1B:
-		z.setDE(z.de() - 1) // dec de
+		z.setDE(z.GetDE() - 1) // dec de
 	case 0x2B:
-		z.setHL(z.hl() - 1) // dec hl
+		z.setHL(z.GetHL() - 1) // dec hl
 	case 0x3B:
 		z.SP = z.SP - 1 // dec sp
 	case 0x27:
@@ -967,20 +967,20 @@ func (z *CPU) execOpcode(opcode byte) {
 	case 0x07:
 		// Rotate left
 		z.Flags.C = z.A&0x80 != 0
-		z.A = (z.A << 1) | bToByte(z.Flags.C)
+		z.A = (z.A << 1) | BToByte(z.Flags.C)
 		z.Flags.N = false
 		z.Flags.H = false
 		z.updateXY(z.A)
 	case 0x0F:
 		// Rotate right
 		z.Flags.C = z.A&1 != 0
-		z.A = (z.A >> 1) | (bToByte(z.Flags.C) << 7)
+		z.A = (z.A >> 1) | (BToByte(z.Flags.C) << 7)
 		z.Flags.N = false
 		z.Flags.H = false
 		z.updateXY(z.A)
 	case 0x17:
 		// rla
-		cy := bToByte(z.Flags.C)
+		cy := BToByte(z.Flags.C)
 		z.Flags.C = z.A&0x80 != 0
 		z.A = (z.A << 1) | cy
 		z.Flags.N = false
@@ -988,7 +988,7 @@ func (z *CPU) execOpcode(opcode byte) {
 		z.updateXY(z.A)
 	case 0x1F:
 		// rra
-		cy := bToByte(z.Flags.C)
+		cy := BToByte(z.Flags.C)
 		z.Flags.C = z.A&1 != 0
 		z.A = (z.A >> 1) | (cy << 7)
 		z.Flags.N = false
@@ -1009,7 +1009,7 @@ func (z *CPU) execOpcode(opcode byte) {
 	case 0xA5:
 		z.lAnd(z.L) // and l
 	case 0xA6:
-		z.lAnd(z.rb(z.hl())) // and (hl)
+		z.lAnd(z.rb(z.GetHL())) // and (hl)
 	case 0xE6:
 		z.lAnd(z.nextB()) // and *
 
@@ -1028,7 +1028,7 @@ func (z *CPU) execOpcode(opcode byte) {
 	case 0xAD:
 		z.lXor(z.L) // xor l
 	case 0xAE:
-		z.lXor(z.rb(z.hl())) // xor (hl)
+		z.lXor(z.rb(z.GetHL())) // xor (hl)
 	case 0xEE:
 		z.lXor(z.nextB()) // xor *
 
@@ -1047,7 +1047,7 @@ func (z *CPU) execOpcode(opcode byte) {
 	case 0xB5:
 		z.lOr(z.L) // or l
 	case 0xB6:
-		z.lOr(z.rb(z.hl())) // or (hl)
+		z.lOr(z.rb(z.GetHL())) // or (hl)
 	case 0xF6:
 		z.lOr(z.nextB()) // or *
 
@@ -1066,7 +1066,7 @@ func (z *CPU) execOpcode(opcode byte) {
 	case 0xBD:
 		z.cp(z.L)
 	case 0xBE:
-		z.cp(z.rb(z.hl())) // cp (hl)
+		z.cp(z.rb(z.GetHL())) // cp (hl)
 	case 0xFE:
 		z.cp(z.nextB()) // cp *
 
@@ -1111,7 +1111,7 @@ func (z *CPU) execOpcode(opcode byte) {
 		z.condJr(z.Flags.C) // jr c, *
 
 	case 0xE9:
-		z.PC = z.hl() // jp (hl)
+		z.PC = z.GetHL() // jp (hl)
 	case 0xCD:
 		z.call(z.nextW()) // call
 
@@ -1176,11 +1176,11 @@ func (z *CPU) execOpcode(opcode byte) {
 		z.call(0x38) // rst 7
 		z.extendedStack[z.SP] = PushValueTypeRst
 	case 0xC5:
-		z.pushW(z.bc()) // push bc
+		z.pushW(z.GetBC()) // push bc
 	case 0xD5:
-		z.pushW(z.de()) // push de
+		z.pushW(z.GetDE()) // push de
 	case 0xE5:
-		z.pushW(z.hl()) // push hl
+		z.pushW(z.GetHL()) // push hl
 	case 0xF5:
 		z.pushW((uint16(z.A) << 8) | uint16(z.f())) // push af
 

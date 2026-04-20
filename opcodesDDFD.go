@@ -15,9 +15,9 @@ func (z *CPU) execOpcodeDDFD(opcode byte, iz *uint16) {
 		z.PC = *iz
 		//z.jump(*iz)
 	case 0x09:
-		z.addIZ(iz, z.bc()) // add iz,bc
+		z.addIZ(iz, z.GetBC()) // add iz,bc
 	case 0x19:
-		z.addIZ(iz, z.de()) // add iz,de
+		z.addIZ(iz, z.GetDE()) // add iz,de
 	case 0x29:
 		z.addIZ(iz, *iz) // add iz,iz
 	case 0x39:

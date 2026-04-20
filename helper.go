@@ -58,6 +58,7 @@ func (z *CPU) pushW(val uint16) {
 }
 
 func (z *CPU) popW() uint16 {
+	z.extendedStack[z.SP] = PushValueTypeDefault
 	z.SP += 2
 	return z.rw(z.SP - 2)
 }
@@ -74,17 +75,17 @@ func (z *CPU) nextW() uint16 {
 	return w
 }
 
-func (z *CPU) bc() uint16 {
-	return (uint16(z.B) << 8) | uint16(z.C)
-}
-
-func (z *CPU) de() uint16 {
-	return (uint16(z.D) << 8) | uint16(z.E)
-}
-
-func (z *CPU) hl() uint16 {
-	return (uint16(z.H) << 8) | uint16(z.L)
-}
+//func (z *CPU) BC() uint16 {
+//	return (uint16(z.B) << 8) | uint16(z.C)
+//}
+//
+//func (z *CPU) DE() uint16 {
+//	return (uint16(z.D) << 8) | uint16(z.E)
+//}
+//
+//func (z *CPU) HL() uint16 {
+//	return (uint16(z.H) << 8) | uint16(z.L)
+//}
 
 func (z *CPU) setBC(val uint16) {
 	z.B = byte(val >> 8)
@@ -178,7 +179,7 @@ func (z *CPU) updateXY(result byte) {
 
 func (z *CPU) DebugOutput() {
 	log.Debugf("PC: %04X, AF: %04X, BC: %04X, DE: %04X, HL: %04X, SP: %04X, IX: %04X, IY: %04X, I: %02X, R: %02X",
-		z.PC, (uint16(z.A)<<8)|uint16(z.f()), z.bc(), z.de(), z.hl(), z.SP,
+		z.PC, (uint16(z.A)<<8)|uint16(z.f()), z.GetBC(), z.GetDE(), z.GetHL(), z.SP,
 		z.IX, z.IY, z.I, z.R)
 
 	log.Debugf("\t(%02X %02X %02X %02X), cycleCount: %d\n", z.rb(z.PC), z.rb(z.PC+1),

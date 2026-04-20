@@ -613,3 +613,34 @@ func TestZ80_JR_mnn(t *testing.T) {
 		t.Errorf("Error JR -nn, result PC=0x%04X, expected: 0x%04X", computer.cpu.PC, expected)
 	}
 }
+
+var testEXSPHL = []byte{0x21, 0x55, 0x44, 0xE3, 0xC9}
+
+func TestZ80_EXSPHL(t *testing.T) {
+	setMemory(0x0000, testEXSPHL)
+	state := computer.cpu.GetState()
+	state.SP = 0x1122
+	state.PC = 0x0000
+	computer.MemWrite(state.SP, 0x88)
+	computer.MemWrite(state.SP+1, 0x99)
+
+	computer.cpu.SetState(state)
+	// Step 1: LD HL,0x4455
+	computer.cpu.RunInstruction()
+	expected := uint16(0x4455)
+	if computer.cpu.GetHL() != expected {
+		t.Errorf("Error LD HL,nnnn, result HL=0x%04X, expected: 0x%04X", computer.cpu.GetHL(), expected)
+	}
+	// Step 2: EX (SP), HL
+	computer.cpu.RunInstruction()
+	expected = uint16(0x9988)
+	if computer.cpu.GetHL() != expected {
+		t.Errorf("Error EX (SP),HL, result HL=0x%04X, expected: 0x%04X", computer.cpu.GetHL(), expected)
+	}
+	expected = uint16(0x4455)
+	mem := uint16(computer.MemRead(state.SP)) | (uint16(computer.MemRead(state.SP+1)) << 8)
+	if mem != expected {
+		t.Errorf("Error EX (SP),HL, result (SP)=0x%04X, expected: 0x%04X", mem, expected)
+	}
+
+}

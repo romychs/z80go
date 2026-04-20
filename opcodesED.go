@@ -41,7 +41,7 @@ func (z *CPU) execOpcodeED(opcode byte) {
 		{
 			z.ldi()
 
-			if z.bc() != 0 {
+			if z.GetBC() != 0 {
 				z.PC -= 2
 				z.cycleCount += 5
 				z.MemPtr = z.PC + 1
@@ -54,7 +54,7 @@ func (z *CPU) execOpcodeED(opcode byte) {
 		{
 			z.ldd()
 
-			if z.bc() != 0 {
+			if z.GetBC() != 0 {
 				z.PC -= 2
 				z.cycleCount += 5
 				z.MemPtr = z.PC + 1
@@ -68,7 +68,7 @@ func (z *CPU) execOpcodeED(opcode byte) {
 	case 0xB1:
 		// cpir
 		z.cpi()
-		if z.bc() != 0 && !z.Flags.Z {
+		if z.GetBC() != 0 && !z.Flags.Z {
 			z.PC -= 2
 			z.cycleCount += 5
 			z.MemPtr = z.PC + 1
@@ -79,7 +79,7 @@ func (z *CPU) execOpcodeED(opcode byte) {
 	case 0xB9:
 		// cpdr
 		z.cpd()
-		if z.bc() != 0 && !z.Flags.Z {
+		if z.GetBC() != 0 && !z.Flags.Z {
 			z.PC -= 2
 			z.cycleCount += 5
 			z.MemPtr = z.PC + 1
@@ -88,9 +88,9 @@ func (z *CPU) execOpcodeED(opcode byte) {
 		}
 	case 0x40:
 		z.inRC(&z.B) // in b, (c)
-		z.MemPtr = z.bc() + 1
+		z.MemPtr = z.GetBC() + 1
 	case 0x48:
-		z.MemPtr = z.bc() + 1
+		z.MemPtr = z.GetBC() + 1
 		z.inRC(&z.C) // in c, (c)
 		z.updateXY(z.C)
 	//case 0x4e:
@@ -98,28 +98,28 @@ func (z *CPU) execOpcodeED(opcode byte) {
 
 	case 0x50:
 		z.inRC(&z.D) // in d, (c)
-		z.MemPtr = z.bc() + 1
+		z.MemPtr = z.GetBC() + 1
 	case 0x58:
 		// in e, (c)
 		z.inRC(&z.E)
-		z.MemPtr = z.bc() + 1
+		z.MemPtr = z.GetBC() + 1
 		z.updateXY(z.E)
 	case 0x60:
 		z.inRC(&z.H) // in h, (c)
-		z.MemPtr = z.bc() + 1
+		z.MemPtr = z.GetBC() + 1
 	case 0x68:
 		z.inRC(&z.L) // in l, (c)
-		z.MemPtr = z.bc() + 1
+		z.MemPtr = z.GetBC() + 1
 		z.updateXY(z.L)
 	case 0x70:
 		// in (c)
 		var val byte
 		z.inRC(&val)
-		z.MemPtr = z.bc() + 1
+		z.MemPtr = z.GetBC() + 1
 	case 0x78:
 		// in a, (c)
 		z.inRC(&z.A)
-		z.MemPtr = z.bc() + 1
+		z.MemPtr = z.GetBC() + 1
 		z.updateXY(z.A)
 	case 0xA2:
 		z.ini() // ini
@@ -141,30 +141,30 @@ func (z *CPU) execOpcodeED(opcode byte) {
 			z.cycleCount += 5
 		}
 	case 0x41:
-		z.core.IOWrite(z.bc(), z.B) // out (c), b
-		z.MemPtr = z.bc() + 1
+		z.core.IOWrite(z.GetBC(), z.B) // out (c), b
+		z.MemPtr = z.GetBC() + 1
 	case 0x49:
-		z.core.IOWrite(z.bc(), z.C) // out (c), c
-		z.MemPtr = z.bc() + 1
+		z.core.IOWrite(z.GetBC(), z.C) // out (c), c
+		z.MemPtr = z.GetBC() + 1
 	case 0x51:
-		z.core.IOWrite(z.bc(), z.D) // out (c), d
-		z.MemPtr = z.bc() + 1
+		z.core.IOWrite(z.GetBC(), z.D) // out (c), d
+		z.MemPtr = z.GetBC() + 1
 	case 0x59:
-		z.core.IOWrite(z.bc(), z.E) // out (c), e
-		z.MemPtr = z.bc() + 1
+		z.core.IOWrite(z.GetBC(), z.E) // out (c), e
+		z.MemPtr = z.GetBC() + 1
 	case 0x61:
-		z.core.IOWrite(z.bc(), z.H) // out (c), h
-		z.MemPtr = z.bc() + 1
+		z.core.IOWrite(z.GetBC(), z.H) // out (c), h
+		z.MemPtr = z.GetBC() + 1
 	case 0x69:
-		z.core.IOWrite(z.bc(), z.L) // out (c), l
-		z.MemPtr = z.bc() + 1
+		z.core.IOWrite(z.GetBC(), z.L) // out (c), l
+		z.MemPtr = z.GetBC() + 1
 	case 0x71:
-		z.core.IOWrite(z.bc(), 0) // out (c), 0
-		z.MemPtr = z.bc() + 1
+		z.core.IOWrite(z.GetBC(), 0) // out (c), 0
+		z.MemPtr = z.GetBC() + 1
 	case 0x79:
 		// out (c), a
-		z.core.IOWrite(z.bc(), z.A)
-		z.MemPtr = z.bc() + 1
+		z.core.IOWrite(z.GetBC(), z.A)
+		z.MemPtr = z.GetBC() + 1
 	case 0xA3:
 		z.outi() // outi
 	case 0xB3:
@@ -185,35 +185,35 @@ func (z *CPU) execOpcodeED(opcode byte) {
 		}
 
 	case 0x42:
-		z.sbcHL(z.bc()) // sbc hl,bc
+		z.sbcHL(z.GetBC()) // sbc hl,bc
 	case 0x52:
-		z.sbcHL(z.de()) // sbc hl,de
+		z.sbcHL(z.GetDE()) // sbc hl,de
 	case 0x62:
-		z.sbcHL(z.hl()) // sbc hl,hl
+		z.sbcHL(z.GetHL()) // sbc hl,hl
 	case 0x72:
 		z.sbcHL(z.SP) // sbc hl,sp
 	case 0x4A:
-		z.adcHL(z.bc()) // adc hl,bc
+		z.adcHL(z.GetBC()) // adc hl,bc
 	case 0x5A:
-		z.adcHL(z.de()) // adc hl,de
+		z.adcHL(z.GetDE()) // adc hl,de
 	case 0x6A:
-		z.adcHL(z.hl()) // adc hl,hl
+		z.adcHL(z.GetHL()) // adc hl,hl
 	case 0x7A:
 		z.adcHL(z.SP) // adc hl,sp
 	case 0x43:
 		// ld (**), bc
 		addr := z.nextW()
-		z.ww(addr, z.bc())
+		z.ww(addr, z.GetBC())
 		z.MemPtr = addr + 1
 	case 0x53:
 		// ld (**), de
 		addr := z.nextW()
-		z.ww(addr, z.de())
+		z.ww(addr, z.GetDE())
 		z.MemPtr = addr + 1
 	case 0x63:
 		// ld (**), hl
 		addr := z.nextW()
-		z.ww(addr, z.hl())
+		z.ww(addr, z.GetHL())
 		z.MemPtr = addr + 1
 	case 0x73:
 		// ld (**), hl
@@ -251,9 +251,9 @@ func (z *CPU) execOpcodeED(opcode byte) {
 	case 0x67:
 		// rrd
 		a := z.A
-		val := z.rb(z.hl())
+		val := z.rb(z.GetHL())
 		z.A = (a & 0xF0) | (val & 0xF)
-		z.wb(z.hl(), (val>>4)|(a<<4))
+		z.wb(z.GetHL(), (val>>4)|(a<<4))
 
 		z.Flags.N = false
 		z.Flags.H = false
@@ -261,20 +261,20 @@ func (z *CPU) execOpcodeED(opcode byte) {
 		z.Flags.Z = z.A == 0
 		z.Flags.S = z.A&0x80 != 0
 		z.Flags.P = parity(z.A)
-		z.MemPtr = z.hl() + 1
+		z.MemPtr = z.GetHL() + 1
 	case 0x6F:
 		// rld
 		a := z.A
-		val := z.rb(z.hl())
+		val := z.rb(z.GetHL())
 		z.A = (a & 0xF0) | (val >> 4)
-		z.wb(z.hl(), (val<<4)|(a&0xF))
+		z.wb(z.GetHL(), (val<<4)|(a&0xF))
 		z.Flags.N = false
 		z.Flags.H = false
 		z.updateXY(z.A)
 		z.Flags.Z = z.A == 0
 		z.Flags.S = z.A&0x80 != 0
 		z.Flags.P = parity(z.A)
-		z.MemPtr = z.hl() + 1
+		z.MemPtr = z.GetHL() + 1
 	default:
 		log.Errorf("Unknown ED opcode: %02X\n", opcode)
 	}
