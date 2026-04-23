@@ -14,7 +14,7 @@ func NewCPU(core MemIoRW) *CPU {
 	z := CPU{}
 	z.Reset()
 	z.core = core
-	z.cycleCount = 0
+	z.TStates = 0
 	z.codeCoverageEnabled = false
 	// z.memAccess =
 	z.codeCoverageEnabled = false
@@ -31,7 +31,7 @@ func (z *CPU) RunInstruction() (uint32, *map[uint16]byte) {
 	if z.codeCoverageEnabled {
 		z.codeCoverage[z.PC] = true
 	}
-	pre := z.cycleCount
+	pre := z.TStates
 	if z.Halted {
 		z.execOpcode(0x00)
 	} else {
@@ -39,7 +39,7 @@ func (z *CPU) RunInstruction() (uint32, *map[uint16]byte) {
 		z.execOpcode(opcode)
 	}
 	z.processInterrupts()
-	return z.cycleCount - pre, &z.memAccess
+	return z.TStates - pre, &z.memAccess
 }
 
 // SetState set current CPU state
@@ -71,14 +71,18 @@ func (z *CPU) SetState(state *CPU) {
 	z.Flags = state.Flags
 	z.FlagsAlt = state.FlagsAlt
 
+	z.TStates = state.TStates
+	z.TStatesPart = state.TStatesPart
 	z.MemPtr = state.MemPtr
 	z.IMode = state.IMode
 	z.Iff1 = state.Iff1
 	z.Iff2 = state.Iff2
 	z.Halted = state.Halted
-	z.IntOccurred = state.IntOccurred
-	z.NmiOccurred = false
+	z.intData = state.intData
+	z.intPending = state.intPending
+	z.nmiPending = state.nmiPending
 }
+
 func (z *CPU) GetState() *CPU {
 	return &CPU{
 		A:    z.A,
@@ -109,16 +113,15 @@ func (z *CPU) GetState() *CPU {
 		Iff1:        z.Iff1,
 		Iff2:        z.Iff2,
 		Halted:      z.Halted,
-		CycleCount:  z.cycleCount,
-		IntOccurred: z.IntOccurred,
-		NmiOccurred: z.NmiOccurred,
+		TStatesPart: z.TStatesPart,
+		TStates:     z.TStates,
 		MemPtr:      z.MemPtr,
+
+		intData:    z.intData,
+		intPending: z.intPending,
+		nmiPending: z.nmiPending,
 	}
 }
-
-//func (z *CPU) PC() uint16 {
-//	return z.PC
-//}
 
 // ClearCodeCoverage - clears code coverage journal
 func (z *CPU) ClearCodeCoverage() {

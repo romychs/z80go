@@ -183,11 +183,11 @@ func (z *CPU) DebugOutput() {
 		z.IX, z.IY, z.I, z.R)
 
 	log.Debugf("\t(%02X %02X %02X %02X), cycleCount: %d\n", z.rb(z.PC), z.rb(z.PC+1),
-		z.rb(z.PC+2), z.rb(z.PC+3), z.cycleCount)
+		z.rb(z.PC+2), z.rb(z.PC+3), z.TStates)
 }
 
 func (z *CPU) Reset() {
-	z.cycleCount = 0
+	z.TStates = 0
 	z.PC = 0
 	z.SP = 0xFFFF
 	z.IX = 0
@@ -221,7 +221,5 @@ func (z *CPU) Reset() {
 	z.Iff1 = false
 	z.Iff2 = false
 	z.Halted = false
-	z.IntOccurred = false
-	z.NmiOccurred = false
 	z.intData = 0
 }

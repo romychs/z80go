@@ -2,7 +2,7 @@ package z80go
 
 // executes A DD/FD opcode (IZ = IX or IY)
 func (z *CPU) execOpcodeDDFD(opcode byte, iz *uint16) {
-	z.cycleCount += uint32(cyclesDDFD[opcode])
+	z.TStates += uint32(cyclesDDFD[opcode])
 	z.incR()
 
 	switch opcode {

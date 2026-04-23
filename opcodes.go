@@ -30,7 +30,7 @@ func (z *CPU) condCall(condition bool) {
 	addr := z.nextW()
 	if condition {
 		z.call(addr)
-		z.cycleCount += 7
+		z.TStates += 7
 	}
 	z.MemPtr = addr
 }
@@ -45,7 +45,7 @@ func (z *CPU) ret() {
 func (z *CPU) condRet(condition bool) {
 	if condition {
 		z.ret()
-		z.cycleCount += 6
+		z.TStates += 6
 	}
 }
 
@@ -62,7 +62,7 @@ func (z *CPU) condJr(condition bool) {
 	b := z.nextB()
 	if condition {
 		z.jr(b)
-		z.cycleCount += 5
+		z.TStates += 5
 	}
 }
 
@@ -99,16 +99,17 @@ func (z *CPU) subB(a byte, b byte, cy bool) byte {
 func (z *CPU) addW(a uint16, b uint16, cy bool) uint16 {
 	lsb := z.addB(byte(a), byte(b), cy)
 	msb := z.addB(byte(a>>8), byte(b>>8), z.Flags.C)
-	result := (uint16(msb) << 8) | uint16(lsb)
-	z.Flags.Z = result == 0
-	z.MemPtr = a + 1
-	return result
+	return z.addSubRes(a, msb, lsb)
 }
 
 // subW Subtracts two words (with optional carry)
 func (z *CPU) subW(a uint16, b uint16, cy bool) uint16 {
 	lsb := z.subB(byte(a), byte(b), cy)
 	msb := z.subB(byte(a>>8), byte(b>>8), z.Flags.C)
+	return z.addSubRes(a, msb, lsb)
+}
+
+func (z *CPU) addSubRes(a uint16, msb uint8, lsb uint8) uint16 {
 	result := (uint16(msb) << 8) | uint16(lsb)
 	z.Flags.Z = result == 0
 	z.MemPtr = a + 1
@@ -174,39 +175,25 @@ func (z *CPU) dec(a byte) byte {
 // executes A logic "and" between register A and A byte, then stores the
 // result in register A
 func (z *CPU) lAnd(val byte) {
-	result := z.A & val
-	z.Flags.S = result&0x80 != 0
-	z.Flags.Z = result == 0
-	z.Flags.H = true
-	z.Flags.P = parity(result)
-	z.Flags.N = false
-	z.Flags.C = false
-	z.updateXY(result)
-	z.A = result
+	z.lCmn(z.A&val, true)
 }
 
 // executes A logic "xor" between register A and A byte, then stores the
 // result in register A
 func (z *CPU) lXor(val byte) {
-	result := z.A ^ val
-	z.Flags.S = result&0x80 != 0
-	z.Flags.Z = result == 0
-	z.Flags.H = false
-	z.Flags.P = parity(result)
-	z.Flags.N = false
-	z.Flags.C = false
-	z.updateXY(result)
-	z.A = result
+	z.lCmn(z.A^val, false)
 }
 
 // executes A logic "or" between register A and A byte, then stores the
 // result in register A
 func (z *CPU) lOr(val byte) {
-	result := z.A | val
+	z.lCmn(z.A|val, false)
+}
 
+func (z *CPU) lCmn(result byte, hf bool) {
 	z.Flags.S = result&0x80 != 0
 	z.Flags.Z = result == 0
-	z.Flags.H = false
+	z.Flags.H = hf
 	z.Flags.P = parity(result)
 	z.Flags.N = false
 	z.Flags.C = false
@@ -217,11 +204,6 @@ func (z *CPU) lOr(val byte) {
 // compares A value with register A
 func (z *CPU) cp(val byte) {
 	z.subB(z.A, val, false)
-
-	// the only difference between cp and sub is that
-	// the xf/yf are taken from the value to be subtracted,
-	// not the result
-
 	z.updateXY(val)
 }
 
@@ -538,31 +520,37 @@ func (z *CPU) processInterrupts() {
 
 	if z.nmiPending {
 		z.nmiPending = false
-		z.Halted = false
+		if z.Halted {
+			z.PC++
+			z.Halted = false
+		}
 		z.Iff1 = false
 		z.incR()
 
-		z.cycleCount += 11
+		z.TStates += 11
 		z.call(0x0066)
 		return
 	}
 
 	if z.intPending && z.Iff1 {
 		z.intPending = false
-		z.Halted = false
+		if z.Halted {
+			z.PC++
+			z.Halted = false
+		}
 		z.Iff1 = false
 		z.Iff2 = false
 		z.incR()
 
 		switch z.IMode {
 		case 0:
-			z.cycleCount += 11
+			z.TStates += 11
 			z.execOpcode(z.intData)
 		case 1:
-			z.cycleCount += 13
+			z.TStates += 13
 			z.call(0x38)
 		case 2:
-			z.cycleCount += 19
+			z.TStates += 19
 			z.call(z.rw((uint16(z.I) << 8) | uint16(z.intData)))
 		default:
 			log.Errorf("Unsupported interrupt mode %d\n", z.IMode)
@@ -584,7 +572,7 @@ func (z *CPU) GenINT(data byte) {
 
 // executes A non-prefixed opcode
 func (z *CPU) execOpcode(opcode byte) {
-	z.cycleCount += uint32(cycles00[opcode])
+	z.TStates += uint32(cycles00[opcode])
 	z.incR()
 
 	switch opcode {

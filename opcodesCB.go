@@ -4,7 +4,7 @@ import log "github.com/sirupsen/logrus"
 
 // executes A CB opcode
 func (z *CPU) execOpcodeCB(opcode byte) {
-	z.cycleCount += 8
+	z.TStates += 8
 	z.incR()
 
 	// decoding instructions from http://z80.info/decoding.htm#cb
@@ -64,7 +64,7 @@ func (z *CPU) execOpcodeCB(opcode byte) {
 		// in bit (hl), x/y flags are handled differently:
 		if z_ == 6 {
 			z.updateXY(byte(z.MemPtr >> 8))
-			z.cycleCount += 4
+			z.TStates += 4
 		}
 
 	case 2:
@@ -74,7 +74,7 @@ func (z *CPU) execOpcodeCB(opcode byte) {
 	}
 
 	if (x_ == 0 || x_ == 2 || x_ == 3) && z_ == 6 {
-		z.cycleCount += 7
+		z.TStates += 7
 	}
 
 	if reg == &hl {
@@ -154,9 +154,9 @@ func (z *CPU) execOpcodeDcb(opcode byte, addr uint16) {
 
 	if x_ == 1 {
 		// bit instructions take 20 cycles, others take 23
-		z.cycleCount += 20
+		z.TStates += 20
 	} else {
 		z.wb(addr, result)
-		z.cycleCount += 23
+		z.TStates += 23
 	}
 }

@@ -4,7 +4,7 @@ import log "github.com/sirupsen/logrus"
 
 // executes A ED opcode
 func (z *CPU) execOpcodeED(opcode byte) {
-	z.cycleCount += uint32(cyclesED[opcode])
+	z.TStates += uint32(cyclesED[opcode])
 	z.incR()
 	switch opcode {
 	case 0x47:
@@ -43,7 +43,7 @@ func (z *CPU) execOpcodeED(opcode byte) {
 
 			if z.GetBC() != 0 {
 				z.PC -= 2
-				z.cycleCount += 5
+				z.TStates += 5
 				z.MemPtr = z.PC + 1
 			}
 		} // ldir
@@ -56,7 +56,7 @@ func (z *CPU) execOpcodeED(opcode byte) {
 
 			if z.GetBC() != 0 {
 				z.PC -= 2
-				z.cycleCount += 5
+				z.TStates += 5
 				z.MemPtr = z.PC + 1
 			}
 		} // lddr
@@ -70,7 +70,7 @@ func (z *CPU) execOpcodeED(opcode byte) {
 		z.cpi()
 		if z.GetBC() != 0 && !z.Flags.Z {
 			z.PC -= 2
-			z.cycleCount += 5
+			z.TStates += 5
 			z.MemPtr = z.PC + 1
 		} else {
 			//z.mem_ptr++
@@ -81,7 +81,7 @@ func (z *CPU) execOpcodeED(opcode byte) {
 		z.cpd()
 		if z.GetBC() != 0 && !z.Flags.Z {
 			z.PC -= 2
-			z.cycleCount += 5
+			z.TStates += 5
 			z.MemPtr = z.PC + 1
 		} else {
 			//z.mem_ptr++
@@ -128,7 +128,7 @@ func (z *CPU) execOpcodeED(opcode byte) {
 		z.ini()
 		if z.B > 0 {
 			z.PC -= 2
-			z.cycleCount += 5
+			z.TStates += 5
 		}
 	case 0xAA:
 		// ind
@@ -138,7 +138,7 @@ func (z *CPU) execOpcodeED(opcode byte) {
 		z.ind()
 		if z.B > 0 {
 			z.PC -= 2
-			z.cycleCount += 5
+			z.TStates += 5
 		}
 	case 0x41:
 		z.core.IOWrite(z.GetBC(), z.B) // out (c), b
@@ -172,7 +172,7 @@ func (z *CPU) execOpcodeED(opcode byte) {
 		z.outi()
 		if z.B > 0 {
 			z.PC -= 2
-			z.cycleCount += 5
+			z.TStates += 5
 		}
 	case 0xAB:
 		z.outd() // outd
@@ -180,7 +180,7 @@ func (z *CPU) execOpcodeED(opcode byte) {
 		// otdr
 		z.outd()
 		if z.B > 0 {
-			z.cycleCount += 5
+			z.TStates += 5
 			z.PC -= 2
 		}
 

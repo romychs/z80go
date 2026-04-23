@@ -106,17 +106,19 @@ type CPU struct {
 	Iff1        bool   `json:"iff1,omitempty"`
 	Iff2        bool   `json:"iff2,omitempty"`
 	Halted      bool   `json:"halted,omitempty"`
-	CycleCount  uint32 `json:"cycleCount,omitempty"`
-	IntOccurred bool   `json:"intOccurred,omitempty"`
-	NmiOccurred bool   `json:"interruptOccurred,omitempty"`
+	TStatesPart uint32 `json:"TStatesPart,omitempty"`
+
 	// mw hidden register
 	MemPtr uint16
 
 	// methods to access CPU to memory and IO ports of computer
-	core    MemIoRW
+	core MemIoRW
+
+	// Data-Bus state for IM2 INT
 	intData byte
 	// Total CPU cycle count (t-states)
-	cycleCount uint32
+	TStates uint32
+
 	// map of memory access
 	memAccess map[uint16]byte
 	// enable or disable code coverage marking
@@ -128,8 +130,11 @@ type CPU struct {
 	// map of stack data marking
 	extendedStack map[uint16]PushValueType
 
-	iffDelay   byte
+	iffDelay byte
+	// intPending is true if Interrupt is pending
 	intPending bool
+
+	// nmiPending is true if Interrupt is pending
 	nmiPending bool
 }
 

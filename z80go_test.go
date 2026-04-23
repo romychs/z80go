@@ -438,9 +438,7 @@ func setComputerState(test Z80TestIn) {
 		Iff1:        test.state.IFF1,
 		Iff2:        test.state.IFF2,
 		Halted:      test.state.isHalted,
-		CycleCount:  0,
-		IntOccurred: false,
-		NmiOccurred: false,
+		TStatesPart: 0,
 		MemPtr:      test.registers.MemPtr,
 	}
 
